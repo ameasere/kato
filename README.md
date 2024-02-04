@@ -8,7 +8,7 @@
   <h3 align="center">Kato (NetCloud24)</h3>
 
   <p align="center">
-    A cryptographic proof-of-concept algorithm.
+    A Rijndael-inspired cryptographic proof-of-concept algorithm.
     <br />
     <a href="https://github.com/ameasere/kato"><strong>Read Paper »</strong></a>
     <br />
@@ -60,7 +60,7 @@
 
 [![Kato Screen Shot][product-screenshot]](https://github.com/ameasere/kato)
 
-Kato is a cryptographic proof-of-concept algorithm inspired by _________. As a symbol of power, Kato serves as a hybridization focusing on efficiency and versatility without compromising security. We welcome **any** and **all** contributions towards the implementation and empowerment of the algorithm, aiming to become more than just a conceptualized technology.
+Kato is a cryptographic proof-of-concept algorithm inspired by AES (Rijndael), or the Advanced Encryption Standard. As a symbol of power, Kato serves as a hybridization focusing on efficiency and versatility without compromising security. We welcome **any** and **all** contributions towards the implementation and empowerment of the algorithm, aiming to become more than just a conceptualized technology.
 
 <p align="right">(<a href="#readme-top">Back to top</a>)</p>
 
