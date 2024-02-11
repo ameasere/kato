@@ -2,7 +2,7 @@ class Kato:
     def __init__(self, key):
         self.key = key
         self.key_length = len(key)
-        self.s_box = [
+        self.s_box = [0x10, 0x20
 
         ]
         self.inv_s_box = [
