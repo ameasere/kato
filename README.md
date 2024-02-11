@@ -56,9 +56,13 @@
 
 
 <!-- ABOUT THE PROJECT -->
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fameasere%2Fkato.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fameasere%2Fkato?ref=badge_large)
+
 ## About The Project
 
 [![Kato Screen Shot][product-screenshot]](https://github.com/ameasere/kato)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fameasere%2Fkato.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fameasere%2Fkato?ref=badge_shield)
 
 Kato is a cryptographic proof-of-concept algorithm inspired by AES (Rijndael), or the Advanced Encryption Standard. As a symbol of power, Kato serves as a hybridization focusing on efficiency and versatility without compromising security. We welcome **any** and **all** contributions towards the implementation and empowerment of the algorithm, aiming to become more than just a conceptualized technology.
 
@@ -234,4 +238,4 @@ Use this space to list resources you find helpful and would like to give credit 
 [Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+[JQuery-url]: https://jquery.com
