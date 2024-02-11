@@ -41,6 +41,7 @@ jobs:
     - name: Push changes to github
       run: |
         git add -A
+        git config --global user.email "${{ github.event.sender.email }}"
         git config --global user.name "${{ github.event.sender.login }}"
         git commit -m '[skip ci] Automatic setup of repo'
         git push origin ${{ github.ref }}
