@@ -1,1 +1,2 @@
 pycryptodomex==3.20.0
+sphinx-rtd-theme==2.0.0
