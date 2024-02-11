@@ -13,7 +13,7 @@ setuptools.setup(
     name="kato",
     version="1",
     author="ameasere",
-    description="Rijndael-inspired Symmetric Encryption PoC",
+    description="NetCloud24 Cryptographic POC",
     url="https://github.com/ameasere/kato",
     long_description=long_description,
     long_description_content_type=README_MIME,
