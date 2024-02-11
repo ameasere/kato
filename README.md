@@ -8,7 +8,7 @@
   <h3 align="center">Kato (NetCloud24)</h3>
 
   <p align="center">
-    A cryptographic proof-of-concept algorithm.
+    A Rijndael-inspired cryptographic proof-of-concept algorithm.
     <br />
     <a href="https://github.com/ameasere/kato"><strong>Read Paper »</strong></a>
     <br />
@@ -56,11 +56,15 @@
 
 
 <!-- ABOUT THE PROJECT -->
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fameasere%2Fkato.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fameasere%2Fkato?ref=badge_large)
+
 ## About The Project
 
 [![Kato Screen Shot][product-screenshot]](https://github.com/ameasere/kato)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fameasere%2Fkato.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fameasere%2Fkato?ref=badge_shield)
 
-Kato is a cryptographic proof-of-concept algorithm inspired by _________. As a symbol of power, Kato serves as a hybridization focusing on efficiency and versatility without compromising security. We welcome **any** and **all** contributions towards the implementation and empowerment of the algorithm, aiming to become more than just a conceptualized technology.
+Kato is a cryptographic proof-of-concept algorithm inspired by AES (Rijndael), or the Advanced Encryption Standard. As a symbol of power, Kato serves as a hybridization focusing on efficiency and versatility without compromising security. We welcome **any** and **all** contributions towards the implementation and empowerment of the algorithm, aiming to become more than just a conceptualized technology.
 
 <p align="right">(<a href="#readme-top">Back to top</a>)</p>
 
@@ -209,15 +213,15 @@ Use this space to list resources you find helpful and would like to give credit 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/ameasere/kato.svg?style=for-the-badge
-[contributors-url]: https://github.com//ameasere/kato/graphs/contributors
+[contributors-url]: https://github.com/ameasere/kato/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/ameasere/kato.svg?style=for-the-badge
-[forks-url]: https://github.com//ameasere/kato/network/members
+[forks-url]: https://github.com/ameasere/kato/network/members
 [stars-shield]: https://img.shields.io/github/stars/ameasere/kato.svg?style=for-the-badge
-[stars-url]: https://github.com//ameasere/kato/stargazers
+[stars-url]: https://github.com/ameasere/kato/stargazers
 [issues-shield]: https://img.shields.io/github/issues/ameasere/kato.svg?style=for-the-badge
-[issues-url]: https://github.com//ameasere/kato/issues
+[issues-url]: https://github.com/ameasere/kato/issues
 [license-shield]: https://img.shields.io/github/license/ameasere/kato.svg?style=for-the-badge
-[license-url]: https://github.com//ameasere/kato/blob/master/LICENSE.txt
+[license-url]: https://github.com/ameasere/kato/blob/master/LICENSE.txt
 [product-screenshot]: images/screenshot.png
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
@@ -234,4 +238,4 @@ Use this space to list resources you find helpful and would like to give credit 
 [Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+[JQuery-url]: https://jquery.com
