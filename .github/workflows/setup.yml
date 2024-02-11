@@ -32,11 +32,11 @@ jobs:
 
         sed -i -E 's|"name": ".*?"|"name": "'"$PACKAGE_NAME"'"|' .devcontainer.json
 
-        sed -i -E "s|python_package_automation|$PACKAGE_NAME|g" docs/setup.rst
+        sed -i -E "s|kato|$PACKAGE_NAME|g" docs/setup.rst
 
-        sed -i -E "s|leonhma\/python-package-automation|${{github.repository}}|g" docs/setup.rst
+        sed -i -E "s|ameasere\/kato|${{github.repository}}|g" docs/setup.rst
 
-        mv python_package_automation/ "$PACKAGE_NAME"/
+        mv kato/ "$PACKAGE_NAME"/
 
         rm -f .github/workflows/setup.yml
 
