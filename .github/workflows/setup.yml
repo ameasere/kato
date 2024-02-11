@@ -36,8 +36,6 @@ jobs:
 
         sed -i -E "s|ameasere\/kato|${{github.repository}}|g" docs/setup.rst
 
-        mv kato/ "$PACKAGE_NAME"/
-
         rm -f .github/workflows/setup.yml
 
     - name: Push changes to github
