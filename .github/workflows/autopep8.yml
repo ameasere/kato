@@ -10,16 +10,20 @@ on:
 
 jobs:
   autopep8:
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]  # List of Python versions you want to support
+
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
       
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'  # Specify your Python version here
+        python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
