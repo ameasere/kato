@@ -12,7 +12,7 @@ jobs:
   autopep8:
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]  # List of Python versions you want to support
+        python-version: [3.7, 3.8, 3.9]  # List of Python versions you want to support
 
     runs-on: ubuntu-latest
 
