@@ -1,6 +1,9 @@
 class Kato:
     def __init__(self, key):
-        self.key = key
+        if not isinstance(key, int):
+            self.key = int(key, 16)
+        else:
+            self.key = key
         self.key_length = len(key)
         self.s_box = [
 
