@@ -10,17 +10,19 @@ class Kato:
 
         if not isinstance(key, bytes):
             raise KatoInternalError("Key must be a bytes-like object, 461")
-        else:
-            self.__key = key  # Private attribute.
 
-        if not isinstance(iv, bytes):
+        elif not isinstance(iv, bytes):
             raise KatoInternalError("Initialisation Vector must be a bytes-like object, 461")
 
         if not len(key) == 16:
             raise KatoInternalError("Key must be 16 bytes long, 462")
+        else:
+            self.__key = key
 
         if not len(iv) == 16:
             raise KatoInternalError("Initialisation Vector must be 16 bytes long, 462")
+        else:
+            self.__iv = iv
 
         self.key_length = len(key)
         self.s_box = [  # Implemented custom S-Box from paper: doi: 10.1016/j.protcy.2013.12.443
@@ -60,6 +62,10 @@ class Kato:
             [0xEC, 0xA8, 0xFB, 0xD8, 0xE0, 0x56, 0x21, 0x9E, 0x60, 0x24, 0x65, 0x37, 0x0A, 0x80, 0xA4, 0x9C],
             [0x2E, 0xF2, 0xF4, 0xF3, 0x36, 0xF7, 0x64, 0x42, 0x12, 0x41, 0xD2, 0x63, 0x9B, 0x95, 0xA3, 0x58],
             [0xB0, 0x62, 0xC6, 0xD1, 0xD7, 0x77, 0xFA, 0xCD, 0x9F, 0x57, 0x88, 0xA2, 0x9D, 0x81, 0x20, 0x0F]
+        ]
+
+        self.rcon = [
+            0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
         ]
 
         self.rounds = 14
@@ -164,6 +170,50 @@ class Kato:
                 result_state[i][j] = state[i][j] ^ round_key[i][j]
         return result_state
 
+    def __key_expansion(self, key):
+        """
+        Expands the key to generate round keys for each round of encryption.
+
+        Parameters:
+        key (bytes): The original encryption key.
+
+        Returns:
+        list of lists: The expanded round keys for each round.
+        """
+        # Convert key to hexadecimal
+        key_hex = [hex(byte) for byte in key]
+        w0 = key_hex[:4]
+        w1 = key_hex[4:8]
+        w2 = key_hex[8:12]
+        w3 = key_hex[12:16]
+        # g(w3) = s-box substitution + xor with rcon
+        # s-box is a list of lists
+        # For the hex values in w3: first hex bit is the row, second hex bit is the column
+        # For example, if w3[0] = 0x01, then the row is 0 and the column is 1
+        # Get this value from the s-box, this is the new value of w3[0]
+        # XOR this value with rcon[0] to get the new value of w3[0]
+        # Repeat this for all 4 bytes in w3
+        # All values in the s-box are in the form of 0x00
+
+        gw3 = []
+        for i in range(4):
+            row = int(w3[i], 16) >> 4
+            col = int(w3[i], 16) & 0x0F
+            s_box_val = self.s_box[row][col]
+            rcon_val = self.rcon[i]
+            gw3.append(s_box_val ^ rcon_val)
+        # w4 = w0 XOR gw3
+        w4 = [hex(int(w0[i], 16) ^ gw3[i]) for i in range(4)]
+        # w5 = w4 XOR w1
+        w5 = [hex(int(w4[i], 16) ^ int(w1[i], 16)) for i in range(4)]
+        # w6 = w5 XOR w2
+        w6 = [hex(int(w5[i], 16) ^ int(w2[i], 16)) for i in range(4)]
+        # w7 = w6 XOR w3
+        w7 = [hex(int(w6[i], 16) ^ int(w3[i], 16)) for i in range(4)]
+        # Round key = w4, w5, w6, w7
+        round_key = w4 + w5 + w6 + w7
+        return round_key
+
     def encrypt(self, plaintext):
         if not isinstance(plaintext, bytes):
             raise KatoInternalError("Plaintext must be a bytes-like object, 461")
@@ -174,7 +224,15 @@ class Kato:
         # 2: Initial Round
         # 3: Rounds
 
+        # First time round: XOR the message with the IV.
+        state = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            for j in range(4):
+                state[j][i] = plaintext[i + 4 * j] ^ self.__iv[i + 4 * j]
+
         # Key Expansion
+        self.__key_expansion(self.__key)
+
 
     def decrypt(self, ciphertext):
         if not isinstance(ciphertext, bytes):
@@ -202,5 +260,5 @@ class KatoInternalError(Exception):
 
 if __name__ == "__main__":
     k = Kato(b"1234567890123456", b"1234567890123456")
-    k.encrypt(bytes("1234567890123456", "utf-8"))
+    k.encrypt(bytes("abcdefghijklmnop", "utf-8"))  # If you provide the same key and plaintext, the first state table remains all 0.
 
