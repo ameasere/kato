@@ -23,7 +23,7 @@ class Kato:
             raise KatoInternalError("Initialisation Vector must be 16 bytes long, 462")
 
         self.key_length = len(key)
-        self.s_box = [  # Implement custom S-Box from paper: doi: 10.1016/j.protcy.2013.12.443
+        self.s_box = [  # Implemented custom S-Box from paper: doi: 10.1016/j.protcy.2013.12.443
             [0x31, 0x2E, 0x04, 0xAB, 0xC6, 0x70, 0x91, 0x61, 0x19, 0x9F, 0xDC, 0x7D, 0xAD, 0x7F, 0xAC, 0xFF],
             [0x56, 0x82, 0xE8, 0x67, 0xA0, 0x43, 0xB2, 0x4A, 0x36, 0x08, 0x17, 0x22, 0xB8, 0x4F, 0x0E, 0xAE],
             [0xFE, 0xD6, 0x78, 0x95, 0xD9, 0x45, 0x0B, 0x96, 0x58, 0x3F, 0x8C, 0x55, 0x03, 0x92, 0xE0, 0x63],
@@ -43,7 +43,7 @@ class Kato:
         ]
 
         self.inv_s_box = [
-            # Implement custom inverse S-Box from above S-Box.
+            # Implemented custom inverse S-Box from above S-Box.
             [0x33, 0x8B, 0x83, 0x2C, 0x02, 0x49, 0x97, 0xCA, 0x19, 0x5E, 0xBE, 0x26, 0x45, 0x4C, 0x1E, 0xFF],
             [0xE7, 0x68, 0x84, 0x34, 0x72, 0xE2, 0xBF, 0x1A, 0x30, 0x08, 0x85, 0xE8, 0xB2, 0x3E, 0x86, 0x31],
             [0xD4, 0x6B, 0x1B, 0xE3, 0x8A, 0x3B, 0x32, 0x3F, 0xB9, 0x53, 0xCB, 0x4A, 0x48, 0xA6, 0x01, 0x4D],
@@ -77,11 +77,104 @@ class Kato:
 
         return transposed
 
+    def __encrypt_grp(self, plaintext, key):
+        """
+        Encrypts plaintext using Group Encryption (GRP) algorithm.
+
+        Parameters:
+        plaintext (str): The plaintext to be encrypted.
+        key (dict): The encryption key.
+
+        Returns:
+        str: The encrypted ciphertext.
+        """
+        ciphertext = ""
+        for char in plaintext:
+            encrypted_char = key[ord(char)]
+            ciphertext += chr(encrypted_char)
+        return ciphertext
+
+    def __decrypt_grp(self, ciphertext, key):
+        """
+        Decrypts ciphertext encrypted using Group Encryption (GRP) algorithm.
+
+        Parameters:
+        ciphertext (str): The ciphertext to be decrypted.
+        key (dict): The encryption key.
+
+        Returns:
+        str: The decrypted plaintext.
+        """
+        plaintext = ""
+        for char in ciphertext:
+            decrypted_char = chr(list(key.keys())[list(key.values()).index(ord(char))])
+            plaintext += decrypted_char
+        return plaintext
+
+    def __encrypt_ddr(self, plaintext, key):
+        """
+        Encrypts plaintext using Double Data Rate (DDR) algorithm.
+
+        Parameters:
+        plaintext (str): The plaintext to be encrypted.
+        key (str): The encryption key.
+
+        Returns:
+        str: The encrypted ciphertext.
+        """
+        ciphertext = ""
+        for i in range(len(plaintext)):
+            char = plaintext[i]
+            key_char = key[i % len(key)]
+            ciphertext += chr(ord(char) + ord(key_char))
+        return ciphertext
+
+    def __decrypt_ddr(self, ciphertext, key):
+        """
+        Decrypts ciphertext encrypted using Double Data Rate (DDR) algorithm.
+
+        Parameters:
+        ciphertext (str): The ciphertext to be decrypted.
+        key (str): The encryption key.
+
+        Returns:
+        str: The decrypted plaintext.
+        """
+        plaintext = ""
+        for i in range(len(ciphertext)):
+            char = ciphertext[i]
+            key_char = key[i % len(key)]
+            plaintext += chr(ord(char) - ord(key_char))
+        return plaintext
+
+    def __add_round_key(self, state, round_key):
+        """
+        Performs the AddRoundKey operation in Rijndael/AES encryption.
+
+        Parameters:
+        state (list of lists): The state matrix (4x4) representing the current state.
+        round_key (list of lists): The round key matrix (4x4) used for the current round.
+
+        Returns:
+        list of lists: The resulting state matrix after adding the round key.
+        """
+        result_state = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            for j in range(4):
+                result_state[i][j] = state[i][j] ^ round_key[i][j]
+        return result_state
+
     def encrypt(self, plaintext):
         if not isinstance(plaintext, bytes):
             raise KatoInternalError("Plaintext must be a bytes-like object, 461")
         else:
             self.__plaintext = plaintext  # Private attribute.
+
+        # 1: Key Expansion
+        # 2: Initial Round
+        # 3: Rounds
+
+        # Key Expansion
 
     def decrypt(self, ciphertext):
         if not isinstance(ciphertext, bytes):
