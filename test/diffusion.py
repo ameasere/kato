@@ -96,14 +96,14 @@ def decrypt_ddr(ciphertext, key):
 # Example usage:
 plaintext = "Hello, World!"
 key = generate_key()
-grp_encrypted_text = encrypt_grp(plaintext, key)
-print("GRPe Stage:", grp_encrypted_text)
-# DDR encryption
-ddr_encrypted_text = encrypt_ddr(grp_encrypted_text, "key")
-print("DDRe Stage:", ddr_encrypted_text)
-# DDR decryption
-ddr_decrypted_text = decrypt_ddr(ddr_encrypted_text, "key")
-print("DDRd Stage:", ddr_decrypted_text)
-# GRP decryption
-grp_decrypted_text = decrypt_grp(ddr_decrypted_text, key)
-print("GRPd Stage:", grp_decrypted_text)
+for _ in range(14):
+    c = encrypt_grp(plaintext, key)
+    c = encrypt_ddr(c, "key")
+
+print("Encrypted:", c)
+
+for _ in range(14):
+    p = decrypt_ddr(c, "key")
+    p = decrypt_grp(p, key)
+
+print("Decrypted:", p)
