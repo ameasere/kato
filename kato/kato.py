@@ -142,6 +142,10 @@ class Kato:
         round_keys = key_schedule(self.__key)[::-1]
         print(round_keys)
 
+        state = self.transpose_matrix(state)
+        state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
+        state = self.__add_round_key(state, round_keys[len(round_keys) - 2])
+
         # Convert state to bytes and return
         plaintext = b"".join([bytes(row) for row in state])
         return plaintext
