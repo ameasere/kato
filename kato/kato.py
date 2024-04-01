@@ -1,5 +1,8 @@
 # // Main Class //
 import colorama  # Debugging purposes only.
+# Import Rijndael key expansion algorithm
+from aeskeyschedule import key_schedule, reverse_key_schedule
+
 
 class Kato:
     def __init__(self, key):
@@ -60,7 +63,7 @@ class Kato:
             0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
         ]
 
-        self.rounds = 2
+        self.rounds = 14
         self.block_size = 16
 
     @staticmethod
@@ -75,142 +78,25 @@ class Kato:
 
         return transposed
 
-    def __encrypt_grp(self, plaintext, key):
-        """
-        Encrypts plaintext using Group Encryption (GRP) algorithm.
-
-        Parameters:
-        plaintext (str): The plaintext to be encrypted.
-        key (dict): The encryption key.
-
-        Returns:
-        str: The encrypted ciphertext.
-        """
-        ciphertext = ""
-        for char in plaintext:
-            char_ord = ord(char) % 16  # Ensure the value is between 0 and 15
-            encrypted_char = key[char_ord]
-            ciphertext += chr(encrypted_char)
-        return ciphertext
-
-    def __decrypt_grp(self, ciphertext, key):
-        """
-        Decrypts ciphertext encrypted using Group Encryption (GRP) algorithm.
-
-        Parameters:
-        ciphertext (str): The ciphertext to be decrypted.
-        key (bytes): The encryption key.
-
-        Returns:
-        str: The decrypted plaintext.
-        """
-        plaintext = ""
-        for char in ciphertext:
-            decrypted_char = chr(key.index(ord(char)))
-            plaintext += decrypted_char
-        return plaintext
-
-    def __encrypt_ddr(self, plaintext, key):
-        """
-        Encrypts plaintext using Double Data Rate (DDR) algorithm.
-
-        Parameters:
-        plaintext (str): The plaintext to be encrypted.
-        key (str): The encryption key.
-
-        Returns:
-        str: The encrypted ciphertext.
-        """
-        ciphertext = ""
-        for i in range(len(plaintext)):
-            char = plaintext[i]
-            key_char = key[i % len(key)]
-            key_char_int = int(str(key_char), 16)  # Convert hexadecimal string to integer
-            ciphertext += chr(ord(char) + key_char_int)
-        return ciphertext
-
-    def __decrypt_ddr(self, ciphertext, key):
-        """
-        Decrypts ciphertext encrypted using Double Data Rate (DDR) algorithm.
-
-        Parameters:
-        ciphertext (str): The ciphertext to be decrypted.
-        key (str): The encryption key.
-
-        Returns:
-        str: The decrypted plaintext.
-        """
-        plaintext = ""
-        for i in range(len(ciphertext)):
-            char = ciphertext[i]
-            key_char = key[i % len(key)]
-            key_char_int = int(str(key_char), 16)  # Convert hexadecimal string to integer
-
-            # Perform modular arithmetic to ensure the result stays within valid range
-            decrypted_ord = (ord(char) - key_char_int) % 256
-            plaintext += chr(decrypted_ord)
-        return plaintext
-
-    def __add_round_key(self, state, round_key):
+    @staticmethod
+    def __add_round_key(state, round_key):
         """
         Performs the AddRoundKey operation in Rijndael/AES encryption.
 
         Parameters:
         state (list of lists): The state matrix (4x4) representing the current state.
-        round_key (list of lists): The round key matrix (4x4) used for the current round.
+        round_key (bytes): The round key to be added to the state matrix.
 
         Returns:
         list of lists: The resulting state matrix after adding the round key.
         """
+        # Convert round_key from bytes to a 4x4 matrix
+        round_key = [[round_key[i + 4 * j] for i in range(4)] for j in range(4)]
         result_state = [[0] * 4 for _ in range(4)]
         for i in range(4):
             for j in range(4):
                 result_state[i][j] = state[i][j] ^ round_key[i][j]
         return result_state
-
-    def __key_expansion(self, key):
-        """
-        Expands the key to generate round keys for each round of encryption.
-
-        Parameters:
-        key (bytes): The original encryption key.
-
-        Returns:
-        list of lists: The expanded round keys for each round.
-        """
-        # Convert key to hexadecimal
-        key_hex = [hex(byte) for byte in key]
-        w0 = key_hex[:4]
-        w1 = key_hex[4:8]
-        w2 = key_hex[8:12]
-        w3 = key_hex[12:16]
-        # g(w3) = s-box substitution + xor with rcon
-        # s-box is a list of lists
-        # For the hex values in w3: first hex bit is the row, second hex bit is the column
-        # For example, if w3[0] = 0x01, then the row is 0 and the column is 1
-        # Get this value from the s-box, this is the new value of w3[0]
-        # XOR this value with rcon[0] to get the new value of w3[0]
-        # Repeat this for all 4 bytes in w3
-        # All values in the s-box are in the form of 0x00
-
-        gw3 = []
-        for i in range(4):
-            row = int(w3[i], 16) >> 4
-            col = int(w3[i], 16) & 0x0F
-            s_box_val = self.s_box[row][col]
-            rcon_val = self.rcon[i]
-            gw3.append(s_box_val ^ rcon_val)
-        # w4 = w0 XOR gw3
-        w4 = [hex(int(w0[i], 16) ^ gw3[i]) for i in range(4)]
-        # w5 = w4 XOR w1
-        w5 = [hex(int(w4[i], 16) ^ int(w1[i], 16)) for i in range(4)]
-        # w6 = w5 XOR w2
-        w6 = [hex(int(w5[i], 16) ^ int(w2[i], 16)) for i in range(4)]
-        # w7 = w6 XOR w3
-        w7 = [hex(int(w6[i], 16) ^ int(w3[i], 16)) for i in range(4)]
-        # Round key = w4, w5, w6, w7
-        round_key = w4 + w5 + w6 + w7
-        return round_key
 
     def encrypt(self, plaintext):
         if not isinstance(plaintext, bytes):
@@ -222,40 +108,17 @@ class Kato:
         # 2: Initial Round
         # 3: Rounds
 
-        # Initial State
-        state = [[0] * 4 for _ in range(4)]
-
+        # Initial State with plaintext
+        state = []
+        for i in range(0, len(plaintext), 4):
+            state.append([plaintext[i], plaintext[i + 1], plaintext[i + 2], plaintext[i + 3]])
         # Key Expansion
-        round_key = self.__key_expansion(self.__key)
-        # Round key values are in "0x00" format, convert them to just 0x00
-        round_key = [[int(val, 16) for val in round_key[i:i + 4]] for i in range(0, len(round_key), 4)]
+        round_keys = key_schedule(self.__key)
+        print(round_keys)
         # XOR this with the initial key
-        state = self.__add_round_key(state, round_key)
-
-        # Rounds
-        for _ in range(self.rounds):
-            # GRP Encryption
-            # DDR Encryption
-            # AddRoundKey
-
-            # State matrix must be be transcribed into a string.
-            print(f"{colorama.Fore.RED}Round: {_+1} | State: {state} | Round Key: {round_key} {colorama.Fore.RESET}")
-            # Substiture with S-Box
-            state = [[self.s_box[state[i][j] >> 4][state[i][j] & 0x0F] for i in range(4)] for j in range(4)]
-            state_string = "".join([chr(state[i][j]) for i in range(4) for j in range(4)])
-            state_string = self.__encrypt_grp(state_string, self.__key)
-            state_string = self.__encrypt_ddr(state_string, self.__key)
-            # State string now goes back to matrix form
-            state = [[ord(state_string[i + 4 * j]) for i in range(4)] for j in range(4)]
-
-            # Key expansion using the previous round key
-            # The key given to key_expansion must be b"<hex chars>"
-            round_key = self.__key_expansion(bytes("".join([chr(val) for row in state for val in row]), "utf-8"))
-            round_key = [[int(val, 16) for val in round_key[i:i + 4]] for i in range(0, len(round_key), 4)]
-            state = self.__add_round_key(state, round_key)
-
-        print(f"{colorama.Fore.BLUE}Final State: {state}{colorama.Fore.RESET}")
-        print(f"{colorama.Back.BLACK} {colorama.Fore.WHITE} --- END OF ENCRYPTION ROUNDS --- {colorama.Back.RESET} {colorama.Fore.RESET}")
+        state = self.__add_round_key(state, round_keys[1])
+        state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
+        state = self.transpose_matrix(state)
 
         # TEMP: convert to ciphertext bytes
         ciphertext = b"".join([bytes(row) for row in state])
@@ -269,18 +132,15 @@ class Kato:
 
         # Decryption: do everything in reverse order.
 
-        # 1. Initial State
-        state = [[0] * 4 for _ in range(4)]
+        # 1. Make the state matrix from the ciphertext
+        # Reverse of b"".join([bytes(row) for row in state])
+        state = []
+        for i in range(0, len(ciphertext), 4):
+            state.append([ciphertext[i], ciphertext[i + 1], ciphertext[i + 2], ciphertext[i + 3]])
 
         # 2. Initial Round Key Expansion (in reverse)
-        round_key = self.__key_expansion(self.__key)
-        round_key = [[int(val, 16) for val in round_key[i:i + 4]] for i in range(0, len(round_key), 4)]
-        print(round_key)
-        state = self.__add_round_key(state, round_key)
-
-        for _ in range(self.rounds):
-            print(f"{colorama.Fore.RED}Round: {_+1} | State: {state} | Round Key: {round_key} {colorama.Fore.RESET}")
-
+        round_keys = key_schedule(self.__key)[::-1]
+        print(round_keys)
 
         # Convert state to bytes and return
         plaintext = b"".join([bytes(row) for row in state])
@@ -320,9 +180,13 @@ class KatoInternalWarning(Warning):
 
 
 if __name__ == "__main__":
-    k = Kato(b"1234567890123456")
+    import random
+
+    # Key must have no repeating values
+    key = bytes(random.sample(range(256), 16))
+    k = Kato(key)
     ciphertext = k.encrypt(bytes("abcdefghijklmnop",
-                    "utf-8"))  # If you provide the same key and plaintext, the first state table remains all 0.
+                                 "utf-8"))  # If you provide the same key and plaintext, the first state table remains all 0.
     print(f"Ciphertext: {ciphertext}")
     plaintext = k.decrypt(ciphertext)
     print(plaintext)

@@ -40,3 +40,11 @@ for i in range(16):
         """
 
 print(inv_s_box)
+
+
+# Test the s-box and inverse s-box
+def test_sbox():
+    for i in range(16):
+        for j in range(16):
+            assert s_box[i][j] == int(inv_s_box[s_box[i][j] // 16][s_box[i][j] % 16], 16)
+            assert inv_s_box[i][j] == int(s_box[inv_s_box[i][j] // 16][inv_s_box[i][j] % 16], 16)
