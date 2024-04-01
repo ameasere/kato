@@ -1,28 +1,20 @@
 # // Main Class //
+import colorama  # Debugging purposes only.
 
 class Kato:
-    def __init__(self, key, iv):
+    def __init__(self, key):
 
         self.__plaintext = None
         self.__ciphertext = None
         self.__key = None
-        self.__iv = None
 
         if not isinstance(key, bytes):
             raise KatoInternalError("Key must be a bytes-like object, 461")
-
-        elif not isinstance(iv, bytes):
-            raise KatoInternalError("Initialisation Vector must be a bytes-like object, 461")
 
         if not len(key) == 16:
             raise KatoInternalError("Key must be 16 bytes long, 462")
         else:
             self.__key = key
-
-        if not len(iv) == 16:
-            raise KatoInternalError("Initialisation Vector must be 16 bytes long, 462")
-        else:
-            self.__iv = iv
 
         self.key_length = len(key)
         self.s_box = [  # Implemented custom S-Box from paper: doi: 10.1016/j.protcy.2013.12.443
@@ -68,7 +60,7 @@ class Kato:
             0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
         ]
 
-        self.rounds = 14
+        self.rounds = 2
         self.block_size = 16
 
     @staticmethod
@@ -94,13 +86,11 @@ class Kato:
         Returns:
         str: The encrypted ciphertext.
         """
-        print(f"For this GRPe round, the plaintext is: {plaintext} and the key is: {key}")
         ciphertext = ""
         for char in plaintext:
             char_ord = ord(char) % 16  # Ensure the value is between 0 and 15
             encrypted_char = key[char_ord]
             ciphertext += chr(encrypted_char)
-        print(f"The ciphertext is: {ciphertext}")
         return ciphertext
 
     def __decrypt_grp(self, ciphertext, key):
@@ -114,7 +104,6 @@ class Kato:
         Returns:
         str: The decrypted plaintext.
         """
-        print(f"For this GRPd round, the ciphertext is: {ciphertext} and the key is: {key}")
         plaintext = ""
         for char in ciphertext:
             decrypted_char = chr(key.index(ord(char)))
@@ -132,14 +121,12 @@ class Kato:
         Returns:
         str: The encrypted ciphertext.
         """
-        print(f"For this DDRe round, the plaintext is: {plaintext} and the key is: {key}")
         ciphertext = ""
         for i in range(len(plaintext)):
             char = plaintext[i]
             key_char = key[i % len(key)]
             key_char_int = int(str(key_char), 16)  # Convert hexadecimal string to integer
             ciphertext += chr(ord(char) + key_char_int)
-        print(f"The ciphertext is: {ciphertext}")
         return ciphertext
 
     def __decrypt_ddr(self, ciphertext, key):
@@ -235,11 +222,8 @@ class Kato:
         # 2: Initial Round
         # 3: Rounds
 
-        # First time round: XOR the message with the IV.
+        # Initial State
         state = [[0] * 4 for _ in range(4)]
-        for i in range(4):
-            for j in range(4):
-                state[j][i] = plaintext[i + 4 * j] ^ self.__iv[i + 4 * j]
 
         # Key Expansion
         round_key = self.__key_expansion(self.__key)
@@ -255,13 +239,23 @@ class Kato:
             # AddRoundKey
 
             # State matrix must be be transcribed into a string.
-
+            print(f"{colorama.Fore.RED}Round: {_+1} | State: {state} | Round Key: {round_key} {colorama.Fore.RESET}")
+            # Substiture with S-Box
+            state = [[self.s_box[state[i][j] >> 4][state[i][j] & 0x0F] for i in range(4)] for j in range(4)]
             state_string = "".join([chr(state[i][j]) for i in range(4) for j in range(4)])
             state_string = self.__encrypt_grp(state_string, self.__key)
             state_string = self.__encrypt_ddr(state_string, self.__key)
             # State string now goes back to matrix form
             state = [[ord(state_string[i + 4 * j]) for i in range(4)] for j in range(4)]
+
+            # Key expansion using the previous round key
+            # The key given to key_expansion must be b"<hex chars>"
+            round_key = self.__key_expansion(bytes("".join([chr(val) for row in state for val in row]), "utf-8"))
+            round_key = [[int(val, 16) for val in round_key[i:i + 4]] for i in range(0, len(round_key), 4)]
             state = self.__add_round_key(state, round_key)
+
+        print(f"{colorama.Fore.BLUE}Final State: {state}{colorama.Fore.RESET}")
+        print(f"{colorama.Back.BLACK} {colorama.Fore.WHITE} --- END OF ENCRYPTION ROUNDS --- {colorama.Back.RESET} {colorama.Fore.RESET}")
 
         # TEMP: convert to ciphertext bytes
         ciphertext = b"".join([bytes(row) for row in state])
@@ -273,37 +267,22 @@ class Kato:
         else:
             self.__ciphertext = ciphertext  # Private attribute.
 
-        # 1: Key Expansion
-        # 2: Initial Round
-        # 3: Rounds
+        # Decryption: do everything in reverse order.
 
-        # DECRYPTION
-
-        # First time round: XOR the message with the IV.
+        # 1. Initial State
         state = [[0] * 4 for _ in range(4)]
-        for i in range(4):
-            for j in range(4):
-                state[j][i] = ciphertext[i + 4 * j] ^ self.__iv[i + 4 * j]
 
-        # Key Expansion
+        # 2. Initial Round Key Expansion (in reverse)
         round_key = self.__key_expansion(self.__key)
-        # Round key values are in "0x00" format, convert them to just 0x00
         round_key = [[int(val, 16) for val in round_key[i:i + 4]] for i in range(0, len(round_key), 4)]
-        # XOR this with the initial key
+        print(round_key)
         state = self.__add_round_key(state, round_key)
 
         for _ in range(self.rounds):
-            # AddRoundKey
-            # DDR Decryption
-            # GRP Decryption
+            print(f"{colorama.Fore.RED}Round: {_+1} | State: {state} | Round Key: {round_key} {colorama.Fore.RESET}")
 
-            state = self.__add_round_key(state, round_key)
-            state_string = "".join([chr(state[i][j]) for i in range(4) for j in range(4)])
-            state_string = self.__decrypt_ddr(state_string, self.__key)
-            state_string = self.__decrypt_grp(state_string, self.__key)
-            state = [[ord(state_string[i + 4 * j]) for i in range(4)] for j in range(4)]
 
-        # TEMP: convert to plaintext bytes
+        # Convert state to bytes and return
         plaintext = b"".join([bytes(row) for row in state])
         return plaintext
 
@@ -341,7 +320,7 @@ class KatoInternalWarning(Warning):
 
 
 if __name__ == "__main__":
-    k = Kato(b"1234567890123456", b"1234567890123456")
+    k = Kato(b"1234567890123456")
     ciphertext = k.encrypt(bytes("abcdefghijklmnop",
                     "utf-8"))  # If you provide the same key and plaintext, the first state table remains all 0.
     print(f"Ciphertext: {ciphertext}")
