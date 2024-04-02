@@ -98,11 +98,56 @@ class Kato:
                 result_state[i][j] = state[i][j] ^ round_key[i][j]
         return result_state
 
+    @staticmethod
+    def omflip_matrix(input_matrix, key):
+        # Constants for bitwise operations
+        mask = 0xFFFFFFFF
+        shift = 5
+
+        # Perform linear permutation
+        output_matrix = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            for j, pos in enumerate(key):
+                output_matrix[i][j] = input_matrix[i][pos]
+
+        # Perform bitwise operations
+        for i in range(4):
+            for j in range(4):
+                output_matrix[i][j] = ((output_matrix[i][j] << shift) | (output_matrix[i][j] >> (32 - shift))) & mask
+
+        return output_matrix
+
+    @staticmethod
+    def omflip_decrypt_matrix(encrypted_matrix, key):
+        # Constants for bitwise operations
+        mask = 0xFFFFFFFF
+        shift = 5
+
+        # Inverse permutation of the key
+        inv_key = [key.index(i) for i in range(4)]
+
+        # Reverse bitwise operations
+        decrypted_matrix = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            for j in range(4):
+                decrypted_matrix[i][j] = ((encrypted_matrix[i][j] >> shift) | (
+                        encrypted_matrix[i][j] << (32 - shift))) & mask
+
+        # Reverse linear permutation
+        output_matrix = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            for j, pos in enumerate(inv_key):
+                output_matrix[i][j] = decrypted_matrix[i][pos]
+
+        return output_matrix
+
     def encrypt(self, plaintext):
+        """
         if not isinstance(plaintext, bytes):
             raise KatoInternalError("Plaintext must be a bytes-like object, 461")
         else:
             self.__plaintext = plaintext  # Private attribute.
+        """
 
         # 1: Key Expansion
         # 2: Initial Round
@@ -114,41 +159,50 @@ class Kato:
             state.append([plaintext[i], plaintext[i + 1], plaintext[i + 2], plaintext[i + 3]])
         # Key Expansion
         round_keys = key_schedule(self.__key)
-        print(round_keys)
         # XOR this with the initial key
         state = self.__add_round_key(state, round_keys[1])
         state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
         state = self.transpose_matrix(state)
+        state = self.omflip_matrix(state, [3, 1, 0, 2])
+
+        print(f"{colorama.Fore.RED}Encrypted State: {colorama.Style.RESET_ALL}")
+        for row in state:
+            print(row)
 
         # TEMP: convert to ciphertext bytes
-        ciphertext = b"".join([bytes(row) for row in state])
-        return ciphertext
+        # Return as list of lists
+        # We can't return as bytes, as all the hex numbers are >1000
+        return state
 
     def decrypt(self, ciphertext):
+        """
         if not isinstance(ciphertext, bytes):
             raise KatoInternalError("Ciphertext must be a bytes-like object, 461")
         else:
             self.__ciphertext = ciphertext  # Private attribute.
+        """
 
         # Decryption: do everything in reverse order.
 
         # 1. Make the state matrix from the ciphertext
         # Reverse of b"".join([bytes(row) for row in state])
-        state = []
-        for i in range(0, len(ciphertext), 4):
-            state.append([ciphertext[i], ciphertext[i + 1], ciphertext[i + 2], ciphertext[i + 3]])
+        state = ciphertext
 
         # 2. Initial Round Key Expansion (in reverse)
         round_keys = key_schedule(self.__key)[::-1]
-        print(round_keys)
 
+        state = self.omflip_decrypt_matrix(state, [3, 1, 0, 2])
         state = self.transpose_matrix(state)
         state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
         state = self.__add_round_key(state, round_keys[len(round_keys) - 2])
 
-        # Convert state to bytes and return
-        plaintext = b"".join([bytes(row) for row in state])
-        return plaintext
+
+        print(f"{colorama.Fore.RED}Decrypted State: {colorama.Style.RESET_ALL}")
+        try:
+            plaintext = b"".join([bytes(row) for row in state])
+            return plaintext
+        except:
+            return state
 
 
 # /// Exception Handlers ///
