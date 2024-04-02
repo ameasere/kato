@@ -5,29 +5,28 @@ from aeskeyschedule import key_schedule, reverse_key_schedule
 
 
 class Kato:
-    def __init__(self, key, iv=None):
+    def __init__(self, key, iv):
 
         self.__plaintext = None
         self.__ciphertext = None
         self.__key = None
-
-        if iv is not None:
-            if not isinstance(iv, bytes):
-                raise KatoInternalError("IV must be a bytes-like object, 461")
-            elif not len(iv) == 16:
-                raise KatoInternalError("IV must be 16 bytes long, 462")
-            else:
-                self.__iv = iv
-        else:
-            self.__iv = None
+        self.__iv = None
 
         if not isinstance(key, bytes):
             raise KatoInternalError("Key must be a bytes-like object, 461")
 
-        elif not len(key) == 16:
+        if not len(key) == 16:
             raise KatoInternalError("Key must be 16 bytes long, 462")
         else:
             self.__key = key
+
+        if not isinstance(iv, bytes):
+            raise KatoInternalError("IV must be a bytes-like object, 461")
+
+        if not len(iv) == 16:
+            raise KatoInternalError("IV must be 16 bytes long, 462")
+        else:
+            self.__iv = iv
 
         self.key_length = len(key)
         self.s_box = [  # Implemented custom S-Box from paper: doi: 10.1016/j.protcy.2013.12.443
@@ -69,7 +68,12 @@ class Kato:
             [0xB0, 0x62, 0xC6, 0xD1, 0xD7, 0x77, 0xFA, 0xCD, 0x9F, 0x57, 0x88, 0xA2, 0x9D, 0x81, 0x20, 0x0F]
         ]
 
+        self.rcon = [
+            0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
+        ]
+
         self.rounds = 10
+        self.block_size = 16
 
     @staticmethod
     def transpose_matrix(matrix):
@@ -187,8 +191,8 @@ class Kato:
         # XOR this with the initial key
         print(f"{colorama.Fore.BLUE}Starting Encryption with state: {state}{colorama.Style.RESET_ALL}")
         for n in range(self.rounds):
-            if self.__iv is not None:
-                state = self.cipher_block_chaining(state, self.__iv)
+            # XOR with IV first
+            state = self.cipher_block_chaining(state, self.__iv)
             state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
             state = self.transpose_matrix(state)
             state = self.__add_round_key(state, round_keys[n + 1])
@@ -227,8 +231,8 @@ class Kato:
             state = self.__add_round_key(state, round_keys[n])
             state = self.transpose_matrix(state)
             state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
-            if self.__iv is not None:
-                state = self.cipher_block_chaining(state, self.__iv)
+            # XOR with IV first
+            state = self.cipher_block_chaining(state, self.__iv)
 
             print(
                 f"{colorama.Fore.RED}Round {n + 1} | State: {state} | Round Key Used: {round_keys[n]} {colorama.Style.RESET_ALL}")
