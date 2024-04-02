@@ -162,9 +162,9 @@ class Kato:
         # XOR this with the initial key
         print(f"{colorama.Fore.BLUE}Starting Encryption with state: {state}{colorama.Style.RESET_ALL}")
         for n in range(self.rounds):
-            state = self.__add_round_key(state, round_keys[n + 1])
             state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
             state = self.transpose_matrix(state)
+            state = self.__add_round_key(state, round_keys[n + 1])
             print(f"{colorama.Fore.RED}Round {n + 1} | State: {state} | Round Key Used: {round_keys[n+1]} {colorama.Style.RESET_ALL}")
         state = self.omflip_matrix(state, [3, 1, 0, 2])
 
@@ -197,9 +197,10 @@ class Kato:
         state = self.omflip_decrypt_matrix(state, [3, 1, 0, 2])
         print(f"{colorama.Fore.BLUE}Starting Decryption with state: {state}{colorama.Style.RESET_ALL}")
         for n in range(self.rounds):
+            state = self.__add_round_key(state, round_keys[n])
             state = self.transpose_matrix(state)
             state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
-            state = self.__add_round_key(state, round_keys[n])
+
             print(
                 f"{colorama.Fore.RED}Round {n + 1} | State: {state} | Round Key Used: {round_keys[n]} {colorama.Style.RESET_ALL}")
 
