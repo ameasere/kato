@@ -185,19 +185,13 @@ class Kato:
         # Key Expansion
         round_keys = key_schedule(self.__key)
         # XOR this with the initial key
-        print(f"{colorama.Fore.BLUE}Starting Encryption with state: {state}{colorama.Style.RESET_ALL}")
         for n in range(self.rounds):
             if self.__iv is not None:
                 state = self.cipher_block_chaining(state, self.__iv)
             state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
             state = self.transpose_matrix(state)
             state = self.__add_round_key(state, round_keys[n + 1])
-            print(f"{colorama.Fore.RED}Round {n + 1} | State: {state} | Round Key Used: {round_keys[n+1]} {colorama.Style.RESET_ALL}")
         state = self.omflip_matrix(state, [3, 1, 0, 2])
-
-        print(f"{colorama.Fore.GREEN}Encrypted State: {colorama.Style.RESET_ALL}")
-        for row in state:
-            print(row)
 
         # TEMP: convert to ciphertext bytes
         # Return as list of lists
@@ -222,18 +216,12 @@ class Kato:
         round_keys = key_schedule(self.__key)[::-1]
 
         state = self.omflip_decrypt_matrix(state, [3, 1, 0, 2])
-        print(f"{colorama.Fore.BLUE}Starting Decryption with state: {state}{colorama.Style.RESET_ALL}")
         for n in range(self.rounds):
             state = self.__add_round_key(state, round_keys[n])
             state = self.transpose_matrix(state)
             state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
             if self.__iv is not None:
                 state = self.cipher_block_chaining(state, self.__iv)
-
-            print(
-                f"{colorama.Fore.RED}Round {n + 1} | State: {state} | Round Key Used: {round_keys[n]} {colorama.Style.RESET_ALL}")
-
-        print(f"{colorama.Fore.GREEN}Decrypted State: {colorama.Style.RESET_ALL}")
         try:
             plaintext = b"".join([bytes(row) for row in state])
             return plaintext
@@ -282,6 +270,4 @@ if __name__ == "__main__":
     k = Kato(key, iv)
     ciphertext = k.encrypt(bytes("abcdefghijklmnop",
                                  "utf-8"))  # If you provide the same key and plaintext, the first state table remains all 0.
-    print(f"Ciphertext: {ciphertext}")
     plaintext = k.decrypt(ciphertext)
-    print(plaintext)
