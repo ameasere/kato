@@ -10,8 +10,6 @@
   <p align="center">
     A Rijndael-inspired cryptographic proof-of-concept algorithm.
     <br />
-    <a href="https://github.com/ameasere/kato"><strong>Read Paper »</strong></a>
-    <br />
     <br />
     <a href="https://github.com/ameasere/kato">View Demo</a>
     ·
@@ -61,7 +59,6 @@
 
 ## About The Project
 
-[![Kato Screen Shot][product-screenshot]](https://github.com/ameasere/kato)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fameasere%2Fkato.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fameasere%2Fkato?ref=badge_shield)
 
 Kato is a cryptographic proof-of-concept algorithm inspired by AES (Rijndael), or the Advanced Encryption Standard. As a symbol of power, Kato serves as a hybridization focusing on efficiency and versatility without compromising security. We welcome **any** and **all** contributions towards the implementation and empowerment of the algorithm, aiming to become more than just a conceptualized technology.
@@ -72,16 +69,7 @@ Kato is a cryptographic proof-of-concept algorithm inspired by AES (Rijndael), o
 
 ### Built With
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
+* [![Python][Python]][Python-url]
 
 <p align="right">(<a href="#readme-top">Back to top</a>)</p>
 
@@ -95,39 +83,111 @@ This is a minimal example of getting Kato operating locally. You may require add
 ### Prerequisites
 
 This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+* Python: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+  * Ensure you also have **pip** installed.
 
 ### Installation
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
    git clone https://github.com/your_username_/Project-Name.git
    ```
-3. Install NPM packages
+
+   **OR**
+
+   Install using **pip** from the Python Package Index (PyPI)
    ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
+    pip install kato
+    ```
+2. Import into your script
+    ```python
+    from kato import Kato
+    ```
 
 <p align="right">(<a href="#readme-top">Back to top</a>)</p>
-
-
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Below are the minimal usage examples, as well as the returned types from Kato.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+<details><summary>Encrypting</summary>
+
+**ECB** Mode:
+
+```python
+from kato import Kato
+
+key = bytes(random.sample(range(256), 16))
+k = Kato(key)
+ciphertext = k.encrypt(bytes("abcdefghijklmnop","utf-8"))
+```
+
+**CBC** Mode:
+
+```python
+from kato import Kato
+
+key = bytes(random.sample(range(256), 16))
+iv = bytes(random.sample(range(256), 16))
+k = Kato(key, iv)
+ciphertext = k.encrypt(bytes("abcdefghijklmnop","utf-8"))
+```
+
+</details>
+
+<details><summary>Decrypting</summary>
+
+```python
+plaintext = k.decrypt(ciphertext)
+```
+
+</details>
+
+
+Each Kato class instance will have a key (and optionally, an Initialization Vector) as an attribute. This means you will have to create new Kato instances for each key (and IV pair) you wish to use.
+
+<details><summary>Types</summary>
+
+* **Kato.__init__()**:
+    * **key**: 16 bytes
+    * **iv** (Optional): 16 bytes
+
+* **Kato.encrypt()**: Returns a 2D Array (list of lists)
+    * **plaintext**: 16 bytes
+    * **Example Return**: `[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]`
+
+* **Kato.decrypt()**: Returns a bytes object or 2D Array (list of lists)
+    * **ciphertext**: 16 bytes
+    * **Example Return**: `b'abcdefghijklmnop'` or `[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]`
+      * **Note**: If any digit in the state matrix cannot be decoded into hex bytes, the function will return a 2D Array.
+
+* **Kato.cipher_block_chaining()**: Returns a bytes object.
+    * **block**: 16 bytes
+    * **IV** (Optional): 16 bytes
+    * **Example Return**: `b'\xxx\xxx\xxx\xxx'`
+      * **Note**: This CBC implementation is NOT true CBC, instead a mock-CBC simplying XORing the IV with the block before encryption and after decryption.
+
+* **Kato.transpose_matrix()**: Returns a 2D Array (list of lists)
+    * **matrix**: 4x4 2D Array
+    * **Example Return**: `[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]`
+
+* **Kato.omflip_matrix()**: Returns a 2D Array (list of lists)
+    * **matrix**: 4x4 2D Array
+    * **key**: Array of 4 digits (default is `[3, 1, 0, 2]`)
+    * **Example Return**: `[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]`
+
+* **Kato.omflip_decrypt_matrix()**: Returns a 2D Array (list of lists)
+    * **matrix**: 4x4 2D Array
+    * **key**: Array of 4 digits (default is `[3, 1, 0, 2]`)
+    * **Example Return**: `[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]`
+
+* **Kato.__add_round_key()**: Returns a 2D Array (list of lists)
+    * **state**: 4x4 2D Array
+    * **round_key**: 16 bytes
+    * **Example Return**: `[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]`
+
+</details>
 
 <p align="right">(<a href="#readme-top">Back to top</a>)</p>
 
@@ -136,13 +196,8 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Add Changelog
-- [x] Add Back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+- [ ] Add true CBC mode.
+- [ ] C implementation.
 
 See the [open issues](https://github.com/ameasere/kato/issues) for a full list of proposed features (and known issues).
 
@@ -222,20 +277,5 @@ Use this space to list resources you find helpful and would like to give credit 
 [issues-url]: https://github.com/ameasere/kato/issues
 [license-shield]: https://img.shields.io/github/license/ameasere/kato.svg?style=for-the-badge
 [license-url]: https://github.com/ameasere/kato/blob/master/LICENSE.txt
-[product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
-[Vue-url]: https://vuejs.org/
-[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
-[Angular-url]: https://angular.io/
-[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
-[Svelte-url]: https://svelte.dev/
-[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
-[Laravel-url]: https://laravel.com
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com
+[Python]: https://img.shields.io/badge/python-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
+[Python-url]: https://python.org/
