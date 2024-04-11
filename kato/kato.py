@@ -185,13 +185,16 @@ class Kato:
         # Key Expansion
         round_keys = key_schedule(self.__key)
         # XOR this with the initial key
-        for n in range(self.rounds):
-            if self.__iv is not None:
-                state = self.cipher_block_chaining(state, self.__iv)
-            state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
-            state = self.transpose_matrix(state)
-            state = self.__add_round_key(state, round_keys[n + 1])
-        state = self.omflip_matrix(state, [3, 1, 0, 2])
+        try:
+            for n in range(self.rounds):
+                if self.__iv is not None:
+                    state = self.cipher_block_chaining(state, self.__iv)
+                state = [[self.s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
+                state = self.transpose_matrix(state)
+                state = self.__add_round_key(state, round_keys[n + 1])
+            state = self.omflip_matrix(state, [3, 1, 0, 2])
+        except Exception:
+            raise KatoInternalError(f"An error occurred during encryption, likely incorrect key/IV pair or plaintext.")
 
         # TEMP: convert to ciphertext bytes
         # Return as list of lists
@@ -215,18 +218,21 @@ class Kato:
         # 2. Initial Round Key Expansion (in reverse)
         round_keys = key_schedule(self.__key)[::-1]
 
-        state = self.omflip_decrypt_matrix(state, [3, 1, 0, 2])
-        for n in range(self.rounds):
-            state = self.__add_round_key(state, round_keys[n])
-            state = self.transpose_matrix(state)
-            state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
-            if self.__iv is not None:
-                state = self.cipher_block_chaining(state, self.__iv)
         try:
-            plaintext = b"".join([bytes(row) for row in state])
-            return plaintext
-        except:
-            return state
+            state = self.omflip_decrypt_matrix(state, [3, 1, 0, 2])
+            for n in range(self.rounds):
+                state = self.__add_round_key(state, round_keys[n])
+                state = self.transpose_matrix(state)
+                state = [[self.inv_s_box[state[i][j] // 16][state[i][j] % 16] for j in range(4)] for i in range(4)]
+                if self.__iv is not None:
+                    state = self.cipher_block_chaining(state, self.__iv)
+            # If any digit in the state matrix is > 255, it will raise an error, so return the state matrix.
+            if any(any(i > 255 for i in row) for row in state):
+                return state
+            else:
+                return b"".join(bytes(row) for row in state)
+        except Exception:
+            raise KatoInternalError(f"An error occurred during decryption, likely incorrect key/IV pair or ciphertext.")
 
 
 # /// Exception Handlers ///
