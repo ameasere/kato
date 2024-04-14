@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="images">
+    <file>images/images/power.jpg</file>
+  </qresource>
+  <qresource prefix="icons">
+    <file>images/icons/x.png</file>
+    <file>images/icons/lock_green.png</file>
+    <file>images/icons/lock_white.png</file>
+    <file>images/icons/unlock_green.png</file>
+    <file>images/icons/unlock_white.png</file>
+  </qresource>
+</RCC>
