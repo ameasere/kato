@@ -213,7 +213,12 @@ class Kato:
 
         # 1. Make the state matrix from the ciphertext
         # Reverse of b"".join([bytes(row) for row in state])
-        state = ciphertext
+        if not isinstance(ciphertext, list):
+            state = []
+            for i in range(0, len(ciphertext), 4):
+                state.append([ciphertext[i], ciphertext[i + 1], ciphertext[i + 2], ciphertext[i + 3]])
+        else:
+            state = ciphertext
 
         # 2. Initial Round Key Expansion (in reverse)
         round_keys = key_schedule(self.__key)[::-1]
